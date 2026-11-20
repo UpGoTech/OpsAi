@@ -1,8 +1,8 @@
 {
-  "name": "OpsPilot",
-  "module_name": "OpsPilot",
+  "name": "OpsAi",
+  "module_name": "OpsAi",
   "color": "grey",
   "icon": "octicon octicon-file-directory",
   "type": "module",
-  "label": "OpsPilot"
+  "label": "OpsAi"
 }

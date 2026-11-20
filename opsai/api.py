@@ -1,4 +1,4 @@
-"""Whitelisted OpsPilot API for the desktop client."""
+"""Whitelisted OpsAi API for the desktop client."""
 
 from __future__ import annotations
 
@@ -10,28 +10,28 @@ from frappe import _
 
 @frappe.whitelist()
 def ping():
-	"""Cheap probe so OpsPilot can confirm this site has the OpsPilot app."""
-	return {"ok": True, "app": "opspilot_frappe"}
+	"""Cheap probe so OpsAi can confirm this site has the OpsAi app."""
+	return {"ok": True, "app": "opsai"}
 
 
 @frappe.whitelist()
-def get_my_opspilot_settings():
-	"""Return the signed-in user's OpsPilot Settings, including Password fields.
+def get_my_opsai_settings():
+	"""Return the signed-in user's OpsAi Settings, including Password fields.
 
 	Password values are unavailable via /api/resource (masked as ******), so the
 	desktop client must call this method after /api/method/login.
 
-	Returns None when the user has no OpsPilot Settings row (not permitted to use AI).
+	Returns None when the user has no OpsAi Settings row (not permitted to use AI).
 	"""
 	user = frappe.session.user
 	if not user or user == "Guest":
 		frappe.throw(_("Not logged in"), frappe.AuthenticationError)
 
 	name = user
-	if not frappe.db.exists("OpsPilot Settings", name):
+	if not frappe.db.exists("OpsAi Settings", name):
 		return None
 
-	doc = frappe.get_doc("OpsPilot Settings", name)
+	doc = frappe.get_doc("OpsAi Settings", name)
 	if doc.user != user and "System Manager" not in frappe.get_roles(user):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 

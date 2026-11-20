@@ -1,8 +1,8 @@
-app_name = "opspilot_frappe"
-app_title = "OpsPilot"
-app_publisher = "OpsPilot"
-app_description = "Per-user AI settings vault for OpsPilot"
-app_email = "opspilot@example.com"
+app_name = "opsai"
+app_title = "OpsAi"
+app_publisher = "OpsAi"
+app_description = "Per-user AI settings vault for OpsAi"
+app_email = "opsai@example.com"
 app_license = "MIT"
 
 required_apps = []
@@ -11,15 +11,15 @@ required_apps = []
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/opspilot_frappe/css/opspilot_frappe.css"
-# app_include_js = "/assets/opspilot_frappe/js/opspilot_frappe.js"
+# app_include_css = "/assets/opsai/css/opsai.css"
+# app_include_js = "/assets/opsai/js/opsai.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/opspilot_frappe/css/opspilot_frappe.css"
-# web_include_js = "/assets/opspilot_frappe/js/opspilot_frappe.js"
+# web_include_css = "/assets/opsai/css/opsai.css"
+# web_include_js = "/assets/opsai/js/opsai.js"
 
 # include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "opspilot_frappe/public/scss/website"
+# website_theme_scss = "opsai/public/scss/website"
 
 # include js, css files in header of web form
 # webform_include_js = {"doctype": "public/js/doctype.js"}
@@ -56,54 +56,54 @@ required_apps = []
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "opspilot_frappe.utils.jinja_methods",
-# 	"filters": "opspilot_frappe.utils.jinja_filters"
+# 	"methods": "opsai.utils.jinja_methods",
+# 	"filters": "opsai.utils.jinja_filters"
 # }
 
 # Installation
 # ------------
 
-# before_install = "opspilot_frappe.install.before_install"
-# after_install = "opspilot_frappe.install.after_install"
+# before_install = "opsai.install.before_install"
+# after_install = "opsai.install.after_install"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "opspilot_frappe.uninstall.before_uninstall"
-# after_uninstall = "opspilot_frappe.uninstall.after_uninstall"
+# before_uninstall = "opsai.uninstall.before_uninstall"
+# after_uninstall = "opsai.uninstall.after_uninstall"
 
 # Integration Setup
 # ------------------
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "opspilot_frappe.utils.before_app_install"
-# after_app_install = "opspilot_frappe.utils.after_app_install"
+# before_app_install = "opsai.utils.before_app_install"
+# after_app_install = "opsai.utils.after_app_install"
 
 # Integration Cleanup
 # -------------------
 # To clean up dependencies/integrations with other apps
 # Name of the app being uninstalled is passed as an argument
 
-# before_app_uninstall = "opspilot_frappe.utils.before_app_uninstall"
-# after_app_uninstall = "opspilot_frappe.utils.after_app_uninstall"
+# before_app_uninstall = "opsai.utils.before_app_uninstall"
+# after_app_uninstall = "opsai.utils.after_app_uninstall"
 
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
 
-# notification_config = "opspilot_frappe.notifications.get_notification_config"
+# notification_config = "opsai.notifications.get_notification_config"
 
 # Permissions
 # -----------
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-	"OpsPilot Settings": "opspilot_frappe.opspilot.doctype.opspilot_settings.opspilot_settings.get_permission_query_conditions",
+	"OpsAi Settings": "opsai.opsai.doctype.opsai_settings.opsai_settings.get_permission_query_conditions",
 }
 
 has_permission = {
-	"OpsPilot Settings": "opspilot_frappe.opspilot.doctype.opspilot_settings.opspilot_settings.has_permission",
+	"OpsAi Settings": "opsai.opsai.doctype.opsai_settings.opsai_settings.has_permission",
 }
 
 # DocType Class
@@ -131,39 +131,39 @@ has_permission = {
 
 # scheduler_events = {
 # 	"all": [
-# 		"opspilot_frappe.tasks.all"
+# 		"opsai.tasks.all"
 # 	],
 # 	"daily": [
-# 		"opspilot_frappe.tasks.daily"
+# 		"opsai.tasks.daily"
 # 	],
 # 	"hourly": [
-# 		"opspilot_frappe.tasks.hourly"
+# 		"opsai.tasks.hourly"
 # 	],
 # 	"weekly": [
-# 		"opspilot_frappe.tasks.weekly"
+# 		"opsai.tasks.weekly"
 # 	],
 # 	"monthly": [
-# 		"opspilot_frappe.tasks.monthly"
+# 		"opsai.tasks.monthly"
 # 	],
 # }
 
 # Testing
 # -------
 
-# before_tests = "opspilot_frappe.install.before_tests"
+# before_tests = "opsai.install.before_tests"
 
 # Overriding Methods
 # ------------------------------
 #
 # override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "opspilot_frappe.event.get_events"
+# 	"frappe.desk.doctype.event.event.get_events": "opsai.event.get_events"
 # }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "opspilot_frappe.task.get_dashboard_data"
+# 	"Task": "opsai.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
@@ -177,13 +177,13 @@ has_permission = {
 
 # Request Events
 # ----------------
-# before_request = ["opspilot_frappe.utils.before_request"]
-# after_request = ["opspilot_frappe.utils.after_request"]
+# before_request = ["opsai.utils.before_request"]
+# after_request = ["opsai.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["opspilot_frappe.utils.before_job"]
-# after_job = ["opspilot_frappe.utils.after_job"]
+# before_job = ["opsai.utils.before_job"]
+# after_job = ["opsai.utils.after_job"]
 
 # User Data Protection
 # --------------------
@@ -206,7 +206,7 @@ has_permission = {
 # --------------------------------
 
 # auth_hooks = [
-# 	"opspilot_frappe.auth.validate"
+# 	"opsai.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.

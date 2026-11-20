@@ -1,7 +1,7 @@
 [project]
-name = "opspilot_frappe"
-authors = [{ name = "OpsPilot", email = "opspilot@example.com" }]
-description = "Per-user Hermes settings vault for OpsPilot"
+name = "opsai"
+authors = [{ name = "OpsAi", email = "opsai@example.com" }]
+description = "Per-user Hermes settings vault for OpsAi"
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]

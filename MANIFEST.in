@@ -1,15 +1,15 @@
 include MANIFEST.in
 include README.md
 include license.txt
-recursive-include opspilot_frappe *.css
-recursive-include opspilot_frappe *.csv
-recursive-include opspilot_frappe *.html
-recursive-include opspilot_frappe *.ico
-recursive-include opspilot_frappe *.js
-recursive-include opspilot_frappe *.json
-recursive-include opspilot_frappe *.md
-recursive-include opspilot_frappe *.png
-recursive-include opspilot_frappe *.py
-recursive-include opspilot_frappe *.svg
-recursive-include opspilot_frappe *.txt
-recursive-exclude opspilot_frappe *.pyc
+recursive-include opsai *.css
+recursive-include opsai *.csv
+recursive-include opsai *.html
+recursive-include opsai *.ico
+recursive-include opsai *.js
+recursive-include opsai *.json
+recursive-include opsai *.md
+recursive-include opsai *.png
+recursive-include opsai *.py
+recursive-include opsai *.svg
+recursive-include opsai *.txt
+recursive-exclude opsai *.pyc
