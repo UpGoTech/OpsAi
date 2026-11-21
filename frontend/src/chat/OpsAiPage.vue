@@ -346,10 +346,6 @@ function openSettings(tab) {
 // the launcher listens for the header's ×; a new tab takes the chat over from the panel
 const host = inject("opsaiHost", null);
 const closePanel = () => host?.close();
-function openInTab() {
-	window.open(`/opsai${route.fullPath}`, "_blank", "noopener");
-	closePanel();
-}
 
 // the composer floats over the list, which pads by its measured height
 const composer = ref(null);
@@ -370,6 +366,10 @@ watch(
 // the route names the open conversation, so links and reloads keep it
 const route = useRoute();
 const router = useRouter();
+function openInTab() {
+	window.open(`/opsai${route.fullPath}`, "_blank", "noopener");
+	closePanel();
+}
 // a setup form's record in the chat's place, for whoever may read its records
 // a started chat's + menu after Attach: skills where there are some or one can be added. A new chat
 // has its own buttons for its agent and skills (ChatPickers)

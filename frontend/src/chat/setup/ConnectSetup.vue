@@ -267,8 +267,11 @@ defineExpose({ back });
 // settings' tiles: a soft fill, no border
 const TILE =
 	"flex min-w-0 flex-col items-start gap-3 rounded-6 bg-surface-gray-2 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3 enabled:hover:bg-surface-gray-3 disabled:cursor-default";
-// split where the console's link goes
-const KEY_HELP = __("Create a key in the {0} and paste it here.").split("{0}");
+// split where the console's link goes — fall back if a translation drops {0}
+const KEY_HELP = (() => {
+	const parts = __("Create a key in the {0} and paste it here.").split("{0}");
+	return parts.length >= 2 ? parts : [parts[0] || "", ""];
+})();
 const LINK =
 	"inline-flex items-center text-ink-gray-7 underline decoration-outline-gray-3 underline-offset-4 hover:decoration-outline-gray-6";
 </script>

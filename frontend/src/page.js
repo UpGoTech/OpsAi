@@ -46,7 +46,7 @@ export function createPage(
 
 	function onBoot(boot) {
 		state.boot = { ...state.boot, ...boot };
-		if (!boot.agents.some((agent) => agent.name === state.agent))
+		if (!boot.agents?.some((agent) => agent.name === state.agent))
 			state.agent = defaultAgent(boot);
 	}
 
