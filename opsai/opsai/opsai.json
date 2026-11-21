@@ -1,8 +1,8 @@
 {
   "name": "OpsAi",
   "module_name": "OpsAi",
-  "color": "grey",
-  "icon": "octicon octicon-file-directory",
+  "color": "#3B87F7",
+  "icon": "message",
   "type": "module",
   "label": "OpsAi"
 }

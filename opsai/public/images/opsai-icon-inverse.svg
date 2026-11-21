@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="OpsAi">
+  <!-- Inverse outline (light on dark) -->
+  <path d="M43 15 H57" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M50 15 V28" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <path
+    d="M34 28
+       H66
+       C76 28 82 34 82 44
+       V60
+       C82 70 76 76 66 76
+       H48
+       L36 90
+       L40 76
+       H34
+       C24 76 18 70 18 60
+       V44
+       C18 34 24 28 34 28 Z"
+    stroke="#FFFFFF"
+    stroke-width="5"
+    stroke-linejoin="round"
+    fill="none"/>
+  <path d="M18 42 V58" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M82 42 V58" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="40" cy="46" r="4.5" fill="#FFFFFF"/>
+  <circle cx="60" cy="46" r="4.5" fill="#FFFFFF"/>
+  <path
+    d="M40 58 C45 65 55 65 60 58"
+    stroke="#FFFFFF"
+    stroke-width="3.5"
+    stroke-linecap="round"
+    fill="none"/>
+</svg>

@@ -13,6 +13,11 @@
     "gateway_username",
     "gateway_password",
     "session_token",
+    "session_cookies",
+    "connection_status",
+    "model_section",
+    "default_provider",
+    "default_model",
     "extra_headers"
   ],
   "fields": [
@@ -28,10 +33,10 @@
     {
       "fieldname": "gateway_section",
       "fieldtype": "Section Break",
-      "label": "AI Gateway"
+      "label": "Hermes Gateway"
     },
     {
-      "description": "Base URL of the AI gateway for this user (e.g. https://ai.example.com)",
+      "description": "Hermes base URL (e.g. http://host:32798). Use Test beside the field to verify Hermes is reachable.",
       "fieldname": "gateway_url",
       "fieldtype": "Data",
       "in_list_view": 1,
@@ -40,6 +45,7 @@
     },
     {
       "default": "password",
+      "description": "Password: Hermes Sign-in username/password. Token: API_SERVER_KEY (advanced).",
       "fieldname": "auth_mode",
       "fieldtype": "Select",
       "in_list_view": 1,
@@ -51,19 +57,55 @@
       "depends_on": "eval:doc.auth_mode==\"password\"",
       "fieldname": "gateway_username",
       "fieldtype": "Data",
-      "label": "Gateway Username"
+      "label": "Username",
+      "mandatory_depends_on": "eval:doc.auth_mode==\"password\""
     },
     {
       "depends_on": "eval:doc.auth_mode==\"password\"",
       "fieldname": "gateway_password",
       "fieldtype": "Password",
-      "label": "Gateway Password"
+      "label": "Password",
+      "mandatory_depends_on": "eval:doc.auth_mode==\"password\""
     },
     {
       "depends_on": "eval:doc.auth_mode==\"token\"",
+      "description": "Advanced: Hermes API_SERVER_KEY as Bearer token.",
       "fieldname": "session_token",
       "fieldtype": "Password",
-      "label": "Session Token"
+      "label": "API Server Key"
+    },
+    {
+      "fieldname": "session_cookies",
+      "fieldtype": "Password",
+      "hidden": 1,
+      "label": "Session Cookies",
+      "read_only": 1
+    },
+    {
+      "fieldname": "connection_status",
+      "fieldtype": "Data",
+      "label": "Connection Status",
+      "read_only": 1
+    },
+    {
+      "fieldname": "model_section",
+      "fieldtype": "Section Break",
+      "label": "Default Model"
+    },
+    {
+      "description": "Hermes provider slug (e.g. openrouter). Seeded on Connect; Apply writes it to this user's Hermes.",
+      "fieldname": "default_provider",
+      "fieldtype": "Autocomplete",
+      "label": "Default Provider",
+      "options": ""
+    },
+    {
+      "description": "Default chat model for this user (e.g. deepseek/deepseek-v4.1-flash). Seeded on Connect from Hermes.",
+      "fieldname": "default_model",
+      "fieldtype": "Autocomplete",
+      "in_list_view": 1,
+      "label": "Default Model",
+      "options": ""
     },
     {
       "description": "Optional JSON object of extra HTTP headers for access proxies",
@@ -74,7 +116,7 @@
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-11-20 00:00:00.000000",
+  "modified": "2026-11-21 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "OpsAi",
   "name": "OpsAi Settings",
