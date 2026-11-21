@@ -93,7 +93,10 @@ const searching = ref(false);
 const sid = computed(() => flow.state.sessionId);
 const router = useRouter();
 // the chat's own address, which opens only for its owner and the people it is shared with
-const link = computed(() => new URL(router.resolve(`/s/${sid.value}`).href, location.origin).href);
+const link = computed(() => {
+	if (!sid.value) return "";
+	return new URL(router.resolve(`/s/${sid.value}`).href, location.origin).href;
+});
 const heading = computed(() => {
 	const title = flow.state.session?.title;
 	return title ? __('Sharing "{0}"', [title]) : __("Share chat");

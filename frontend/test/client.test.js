@@ -141,6 +141,7 @@ test("attachments are staged as private Files for the picked model, discarded if
 		},
 	});
 	const client = new FrappeClient({ boot, transport });
+	client.configs.set("S1", { model: "GPT" });
 	const { attachments } = await client.uploadAttachments("S1", [
 		{ name: "shot.png" },
 		{ name: "notes.txt" },
@@ -148,6 +149,11 @@ test("attachments are staged as private Files for the picked model, discarded if
 	assert.deepEqual(attachments, [
 		{ id: "FILE-shot.png", name: "shot.png", kind: "image" },
 		{ id: "FILE-notes.txt", name: "notes.txt", kind: "file" },
+	]);
+	const staged = transport.calls.find(([method]) => method === "opsai.api.attach_file");
+	assert.deepEqual(staged, [
+		"opsai.api.attach_file",
+		{ file: "FILE-shot.png", model: "GPT" },
 	]);
 	// a later durable row for notes.txt is keyed by the File it was staged as
 	const presented = client.present({

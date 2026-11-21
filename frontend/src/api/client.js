@@ -307,10 +307,12 @@ export class FrappeClient {
 		return this.transport.call("opsai.api.cleanup_attachments", { attachments: ids });
 	}
 
-	async uploadAttachments(_sid, files) {
+	async uploadAttachments(sid, files) {
+		// Match Composer’s prepareAttachment path: tell attach_file which model is selected.
+		const model = this.configs.get(sid)?.model ?? null;
 		const attachments = [];
 		try {
-			for (const file of files) attachments.push(await this.prepareAttachment(file));
+			for (const file of files) attachments.push(await this.prepareAttachment(file, model));
 			return { attachments };
 		} catch (error) {
 			await this.discardAttachments(attachments.map((item) => item.id)).catch(() => {});

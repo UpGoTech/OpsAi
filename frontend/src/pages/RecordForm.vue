@@ -164,7 +164,10 @@ function discard() {
 		});
 	});
 }
-const unguard = router.beforeEach(() => leaving || !dirty.value || discard());
+const unguard = router.beforeEach(async () => {
+	if (leaving || !dirty.value) return true;
+	return await discard();
+});
 function onUnload(event) {
 	if (dirty.value) event.preventDefault();
 }
