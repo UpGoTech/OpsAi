@@ -66,13 +66,19 @@ const { current } = useAgent();
 const open = ref(null); // "agent" | "skills"
 const agentButton = ref(null);
 const skillsButton = ref(null);
-const connected = ref(Boolean(page.state.boot.hermes_configured));
+const connected = ref(
+	page.state.boot.hermes_connected !== undefined
+		? Boolean(page.state.boot.hermes_connected)
+		: Boolean(page.state.boot.hermes_configured)
+);
 const statusMessage = ref("");
 const agentTitle = computed(
 	() => page.state.boot.agents.find((agent) => agent.name === current.value)?.title ?? __("Agent")
 );
 const statusTitle = computed(
-	() => statusMessage.value || (connected.value ? __("Hermes is reachable") : __("Hermes is not reachable"))
+	() =>
+		statusMessage.value ||
+		(connected.value ? __("Hermes brain is online") : __("Hermes brain is offline — Connect in OpsAi Settings"))
 );
 const hasSkills = computed(() => (flow.state.skills ?? []).length > 0 || page.can("Flow Skill", "create"));
 
@@ -81,11 +87,11 @@ async function refreshStatus() {
 		const result = await call("opsai.api.test_connection");
 		connected.value = Boolean(result?.connected);
 		statusMessage.value = result?.message || "";
-		page.state.boot.hermes_configured = connected.value;
+		page.state.boot.hermes_connected = connected.value;
 	} catch (err) {
 		connected.value = false;
 		statusMessage.value = err?.message || __("Connection failed");
-		page.state.boot.hermes_configured = false;
+		page.state.boot.hermes_connected = false;
 	}
 }
 

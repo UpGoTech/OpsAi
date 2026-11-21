@@ -15,15 +15,32 @@ After install, assign the **OpsAi User** role to users who should see OpsAi on D
 
 ## Usage
 
+### OpsAi Settings (Hermes assignment)
+
 1. Open **OpsAi Settings** in Desk.
-2. Create one document per User (name = User id).
-3. Set AI `gateway_url`, auth mode, and credentials.
-4. OpsAi logs into this site, calls `opsai.api.ping`, then `get_my_opsai_settings`.
+2. **New** — choose **User** and a unique **Gateway URL** (host + port; one Hermes agent port per user). No defaults are filled in. Use **Test**, then **Save**.
+3. On the saved record, open **Sign in**, enter Hermes username/password (or API key), and click **Connect**. Credentials are stored in Frappe Password fields; Connect reuses them and does not re-prompt unless Hermes rejects the saved password.
+4. **Disconnect** clears the Hermes session and marks the assignment offline. Chat stays offline until Connect runs again (no silent auto-login).
+5. **User** cannot be changed after create — delete the record and create settings for another user if needed.
+
+### Chat when Hermes is offline
+
+- Full `/opsai` and the Desk chat panel show a **Brain not connected** empty state (quote + ask an administrator for access).
+- The composer is hidden and the **Chats** sidebar list is cleared until Connect succeeds.
+- History returns after a successful Connect.
+
+### Hermes workspace (Desk)
+
+When Connected, OpsAi Settings proxies live Hermes tools (model, identity/memory, config, skills, cron, sessions, logs, gateway restart) — OpsAi does not store those files locally.
 
 ## API
 
 - `GET /api/method/opsai.api.ping` — confirms the site supports OpsAi
 - `GET /api/method/opsai.api.get_my_opsai_settings` — caller’s AI settings (Password fields decrypted)
+- `POST /api/method/opsai.api.connect_hermes` — Connect (uses saved credentials; prefers a live session when cookies still work)
+- `POST /api/method/opsai.api.disconnect_hermes` — sticky Disconnect (keeps username/password; clears session cookies)
+- `GET /api/method/opsai.api.test_connection` — Hermes reachability (does not auto-login after Disconnect)
+- `GET /api/method/opsai.api.boot` — chat island boot (`hermes_configured`, `hermes_connected`)
 
 Requires a logged-in session (`sid`). Guest and cross-user access are rejected.
 No settings row → OpsAi shows “This user is not permitted to use AI.”

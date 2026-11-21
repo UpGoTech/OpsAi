@@ -15,10 +15,8 @@
     "session_token",
     "session_cookies",
     "connection_status",
-    "model_section",
     "default_provider",
-    "default_model",
-    "extra_headers"
+    "default_model"
   ],
   "fields": [
     {
@@ -33,10 +31,10 @@
     {
       "fieldname": "gateway_section",
       "fieldtype": "Section Break",
-      "label": "Hermes Gateway"
+      "label": "Connection"
     },
     {
-      "description": "Hermes base URL (e.g. http://host:32798). Use Test beside the field to verify Hermes is reachable.",
+      "description": "Hermes base URL including port (e.g. http://hrms.fabrixcel.com:32798). Must be unique per user — each Hermes agent port is one assignment. Use Test to verify reachability before Save.",
       "fieldname": "gateway_url",
       "fieldtype": "Data",
       "in_list_view": 1,
@@ -50,22 +48,21 @@
       "fieldtype": "Select",
       "in_list_view": 1,
       "label": "Auth Mode",
-      "options": "password\ntoken",
-      "reqd": 1
+      "options": "password\ntoken"
     },
     {
       "depends_on": "eval:doc.auth_mode==\"password\"",
+      "description": "Hermes sign-in username. Required when you click Connect (not on first Save).",
       "fieldname": "gateway_username",
       "fieldtype": "Data",
-      "label": "Username",
-      "mandatory_depends_on": "eval:doc.auth_mode==\"password\""
+      "label": "Username"
     },
     {
       "depends_on": "eval:doc.auth_mode==\"password\"",
+      "description": "Hermes sign-in password. Required when you click Connect (not on first Save).",
       "fieldname": "gateway_password",
       "fieldtype": "Password",
-      "label": "Password",
-      "mandatory_depends_on": "eval:doc.auth_mode==\"password\""
+      "label": "Password"
     },
     {
       "depends_on": "eval:doc.auth_mode==\"token\"",
@@ -84,34 +81,24 @@
     {
       "fieldname": "connection_status",
       "fieldtype": "Data",
+      "hidden": 1,
       "label": "Connection Status",
       "read_only": 1
     },
     {
-      "fieldname": "model_section",
-      "fieldtype": "Section Break",
-      "label": "Default Model"
-    },
-    {
-      "description": "Hermes provider slug (e.g. openrouter). Seeded on Connect; Apply writes it to this user's Hermes.",
+      "description": "Hermes provider slug (e.g. openrouter). Shown in Hermes Workspace when connected.",
       "fieldname": "default_provider",
       "fieldtype": "Autocomplete",
       "label": "Default Provider",
       "options": ""
     },
     {
-      "description": "Default chat model for this user (e.g. deepseek/deepseek-v4.1-flash). Seeded on Connect from Hermes.",
+      "description": "Default chat model for this user. Shown in Hermes Workspace when connected.",
       "fieldname": "default_model",
       "fieldtype": "Autocomplete",
       "in_list_view": 1,
       "label": "Default Model",
       "options": ""
-    },
-    {
-      "description": "Optional JSON object of extra HTTP headers for access proxies",
-      "fieldname": "extra_headers",
-      "fieldtype": "Small Text",
-      "label": "Extra Headers (JSON)"
     }
   ],
   "index_web_pages_for_search": 0,

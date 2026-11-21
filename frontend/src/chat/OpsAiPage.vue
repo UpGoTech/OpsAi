@@ -47,78 +47,84 @@
 						<Button variant="ghost" icon="lucide-x" :title="__('Close')" @click="closePanel" />
 					</template>
 				</ChatHeader>
-				<MessageList
-					:suggestions="!readOnly"
-					:center-composer="!inPanel && !readOnly && !needsSetup"
-				>
-					<template #empty="{ mark }">
-						<SetupState v-if="needsSetup" />
-						<!-- the mark over a quiet heading, the mark a step smaller in a narrow frame -->
-						<template v-else>
-							<BrandMark
-								line
-								:size="32"
-								v-bind="mark"
-								class="min-h-0 shrink max-md:!h-7 max-md:!w-7"
-							/>
-							<h2 class="text-balance text-[22px] text-ink-gray-8">
-								{{ __("What would you like to do?") }}
-							</h2>
+				<!-- Brain offline replaces the whole thread (panel + full app), not only empty chats. -->
+				<div v-if="brainMissing" class="flex min-h-0 flex-1 flex-col items-center justify-center px-6">
+					<SetupState />
+				</div>
+				<template v-else>
+					<MessageList
+						:suggestions="!readOnly"
+						:center-composer="!inPanel && !readOnly && !needsSetup"
+					>
+						<template #empty="{ mark }">
+							<SetupState v-if="needsSetup" />
+							<!-- the mark over a quiet heading, the mark a step smaller in a narrow frame -->
+							<template v-else>
+								<BrandMark
+									line
+									:size="32"
+									v-bind="mark"
+									class="min-h-0 shrink max-md:!h-7 max-md:!w-7"
+								/>
+								<h2 class="text-balance text-[22px] text-ink-gray-8">
+									{{ __("What would you like to do?") }}
+								</h2>
+							</template>
 						</template>
-					</template>
-					<template #error="{ error }">
-						{{ error.message }}
-						<button
-							v-if="error.settings_tab === 'models' && page.can('Flow Model', 'write')"
-							type="button"
-							class="underline"
-							@click="openSettings(error.settings_tab)"
-						>
-							{{ __("Connect a provider") }}
-						</button>
-					</template>
-				</MessageList>
-				<Composer
-					v-if="!readOnly && !needsSetup"
-					ref="composer"
-					:commands="COMMANDS"
-					:mentions="false"
-					:images-only="false"
-					:placeholder="placeholder"
-					:modes="MODES"
-					:plus-lists="plusLists"
-					new-chat-mode-right
-				>
-					<template #below="{ starting }">
-						<p v-if="starting && !inPanel" class="mt-2 px-3 text-center text-sm text-ink-gray-5">
-							{{ __("OpsAi can make mistakes") }}
-						</p>
-					</template>
-					<!-- agent + Hermes Connected/Disconnected; skills only on a new chat -->
-					<template #tools="{ starting, tall, insert }">
-						<ChatPickers :insert="insert" :tall="tall" :starting="starting" />
-					</template>
-					<!-- hide model picker only — approval mode stays (maps to Hermes session yolo) -->
-					<template #toolbar><span /></template>
-					<!-- a started chat's + menu: skills (it keeps its agent) -->
-					<template #plus-list="{ id, beside, close, insert }">
-						<SkillPicker v-if="id === 'skills'" :beside="beside" @close="close" @pick="insert" />
-					</template>
-					<template #palette="{ view, query, close, back }">
-						<AgentPalette
-							v-if="view === 'agents'"
-							:query="query"
-							@close="close"
-							@back="back"
-						/>
-					</template>
-				</Composer>
-				<p
-					v-else-if="readOnly"
-					class="absolute inset-x-0 bottom-0 px-5 pb-5 text-center text-sm text-ink-gray-5"
-				>
-					{{ readOnlyNote }}
-				</p>
+						<template #error="{ error }">
+							{{ error.message }}
+							<button
+								v-if="error.settings_tab === 'models' && page.can('Flow Model', 'write')"
+								type="button"
+								class="underline"
+								@click="openSettings(error.settings_tab)"
+							>
+								{{ __("Connect a provider") }}
+							</button>
+						</template>
+					</MessageList>
+					<Composer
+						v-if="!readOnly && !needsSetup"
+						ref="composer"
+						:commands="COMMANDS"
+						:mentions="false"
+						:images-only="false"
+						:placeholder="placeholder"
+						:modes="MODES"
+						:plus-lists="plusLists"
+						new-chat-mode-right
+					>
+						<template #below="{ starting }">
+							<p v-if="starting && !inPanel" class="mt-2 px-3 text-center text-sm text-ink-gray-5">
+								{{ __("OpsAi can make mistakes") }}
+							</p>
+						</template>
+						<!-- agent + Hermes Connected/Disconnected; skills only on a new chat -->
+						<template #tools="{ starting, tall, insert }">
+							<ChatPickers :insert="insert" :tall="tall" :starting="starting" />
+						</template>
+						<!-- hide model picker only — approval mode stays (maps to Hermes session yolo) -->
+						<template #toolbar><span /></template>
+						<!-- a started chat's + menu: skills (it keeps its agent) -->
+						<template #plus-list="{ id, beside, close, insert }">
+							<SkillPicker v-if="id === 'skills'" :beside="beside" @close="close" @pick="insert" />
+						</template>
+						<template #palette="{ view, query, close, back }">
+							<AgentPalette
+								v-if="view === 'agents'"
+								:query="query"
+								@close="close"
+								@back="back"
+							/>
+						</template>
+					</Composer>
+					<p
+						v-else-if="readOnly"
+						class="absolute inset-x-0 bottom-0 px-5 pb-5 text-center text-sm text-ink-gray-5"
+					>
+						{{ readOnlyNote }}
+					</p>
+				</template>
 			</main>
 			<WorkspacePanel v-if="!pageKind" :beside-navbar="panelHost">
 				<template #empty>
@@ -157,6 +163,7 @@ import { createFlowStore } from "@opsai/ui-core/store.js";
 import { __ } from "@opsai/ui-core/translate.js";
 
 import { FrappeClient } from "../api/client.js";
+import { call } from "../api/frappe.js";
 import * as transport from "../api/frappe.js";
 import { connectSocket } from "../api/socket.js";
 import { createPage } from "../page.js";
@@ -333,9 +340,13 @@ const readOnlyNote = computed(() => {
 		? __("Only {0} can send messages in this chat.", [owner])
 		: __("Only the owner of this chat can send messages.");
 });
+// Hermes brain offline — hide thread + composer everywhere (panel and /opsai).
+const brainMissing = computed(
+	() => Boolean(page.state.boot.hermes_configured) && page.state.boot.hermes_connected === false
+);
 // no model or no agent: the empty state says so, and there is no composer yet
 const needsSetup = computed(
-	() => !page.state.boot.models?.length || !page.state.boot.agents?.length
+	() => !page.state.boot.models?.length || !page.state.boot.agents?.length || brainMissing.value
 );
 // an error's link: settings on its tab
 function openSettings(tab) {
@@ -361,6 +372,21 @@ watch(
 		if (item.kind === "error") toast.error(item.message);
 		else toast.success(item.message);
 	}
+);
+
+// While Hermes is offline, wipe the sidebar chat list (full /opsai and panel).
+watch(
+	brainMissing,
+	(offline, was) => {
+		if (offline) {
+			store.state.sessions = [];
+			store.state.sessionsMore = false;
+			store.startNewChat();
+			return;
+		}
+		if (was) void store.refreshSessions();
+	},
+	{ immediate: true }
 );
 
 // the route names the open conversation, so links and reloads keep it
@@ -437,6 +463,23 @@ let uninstallShortcuts = null;
 let uninstallFocusRings = null;
 let uninstallViewport = null;
 let unmeasure = null;
+let hermesStatusTimer = null;
+
+async function refreshHermesStatus() {
+	if (!page.state.boot.hermes_configured) return;
+	try {
+		const result = await call("opsai.api.test_connection");
+		page.state.boot.hermes_connected = Boolean(result?.connected);
+	} catch {
+		page.state.boot.hermes_connected = false;
+	}
+}
+
+function onHermesStatusFocus() {
+	if (document.visibilityState && document.visibilityState !== "visible") return;
+	void refreshHermesStatus();
+}
+
 onMounted(async () => {
 	// an island lays out by its own box, which a panel narrows; the page's width says nothing
 	unmeasure = measureLayoutBy(root.value);
@@ -446,8 +489,14 @@ onMounted(async () => {
 	);
 	// the page around the panel owns the window's viewport
 	if (!inPanel) uninstallViewport = installViewport();
+	// Keep brain status in sync with Desk Disconnect/Connect (panel sits beside the form).
+	await refreshHermesStatus();
+	hermesStatusTimer = window.setInterval(() => void refreshHermesStatus(), 8000);
+	window.addEventListener("focus", onHermesStatusFocus);
+	document.addEventListener("visibilitychange", onHermesStatusFocus);
 	store.refreshModels();
-	await store.refreshSessions();
+	// Offline: list_sessions is empty; skip so a race cannot refill the sidebar.
+	if (!brainMissing.value) await store.refreshSessions();
 	// the route watcher, a click or a first message may have moved on while the list loaded,
 	// and a page keeps its place
 	if (store.state.sessionId || store.state.conversation.sending.length || route.params.kind)
@@ -468,6 +517,9 @@ function reopened(id) {
 	return inPanel && id !== askedSession;
 }
 onBeforeUnmount(() => {
+	if (hermesStatusTimer) window.clearInterval(hermesStatusTimer);
+	window.removeEventListener("focus", onHermesStatusFocus);
+	document.removeEventListener("visibilitychange", onHermesStatusFocus);
 	uninstallShortcuts?.();
 	uninstallFocusRings?.();
 	uninstallViewport?.();
