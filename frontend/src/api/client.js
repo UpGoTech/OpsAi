@@ -208,7 +208,7 @@ export class FrappeClient {
 			session: sid,
 			model,
 		});
-		this.configs.set(sid, { ...this.configs.get(sid), model: data.model });
+		this.configs.set(sid, { ...(this.configs.get(sid) ?? {}), model: data.model });
 		return {
 			model: data.model,
 			context_window: this.contextWindows.get(data.model) ?? null,
