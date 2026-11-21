@@ -47,6 +47,7 @@ const boot = {
 	socketio_port: 9000,
 	user: { name: "tester@example.com", full_name: "Tester" },
 	hermes_configured: true,
+	hermes_connected: true,
 	permissions: {},
 	models: [
 		{
@@ -525,6 +526,44 @@ test("without a model the normal page shows the setup state and no composer, and
 	const user = mountSetup({});
 	assert.equal(user.setup.querySelector("button"), null);
 	assert.ok(user.setup.textContent.includes("Ask an administrator to configure OpsAi Settings."));
+});
+
+test("when Hermes is disconnected the brain-offline state replaces the thread (including old logs) and hides the composer", async (t) => {
+	const previous = transport.answers["opsai.api.test_connection"];
+	transport.answers["opsai.api.test_connection"] = {
+		ok: false,
+		connected: false,
+		message: "Hermes is disconnected",
+	};
+	t.after(() => {
+		transport.answers["opsai.api.test_connection"] = previous;
+	});
+	const el = mountPage(t, {
+		boot: { ...boot, hermes_configured: true, hermes_connected: false },
+	});
+	await until(() => called("opsai.api.list_sessions"));
+	await until(() => called("opsai.api.test_connection"));
+	await nextTick();
+	assert.ok(el.querySelector("[data-stub=SetupState]"), "brain-offline state replaces the thread");
+	assert.equal(el.querySelector("textarea"), null, "composer stays hidden while disconnected");
+	assert.ok(!el.textContent.includes("What would you like to do?"));
+
+	const { createPage } = await import("../src/page.js");
+	const page = createPage({
+		...boot,
+		hermes_configured: true,
+		hermes_connected: false,
+		permissions: { "OpsAi Settings": ["write"] },
+	});
+	const setup = document.createElement("div");
+	const app = createApp(SetupState).use(router);
+	app.provide("opsai", { setSettingsOpen: () => {} });
+	app.provide("opsaiPage", page);
+	app.mount(setup);
+	t.after(() => app.unmount());
+	assert.ok(setup.textContent.includes("Brain not connected"));
+	assert.ok(setup.textContent.includes("Brain offline"));
+	assert.ok([...setup.querySelectorAll("button")].some((b) => b.textContent.includes("Grant access")));
 });
 
 test("an explicit conversation URL opens even outside the recent session list, syncing a run that ended as it opened", async (t) => {

@@ -148,15 +148,9 @@ class GatewayClient:
 
 	def connect(self):
 		url = resolve_ws_url(self.settings)
-		headers = []
-		extra = self.settings.get("extra_headers") or {}
-		for k, v in extra.items():
-			if k and v and k.lower() not in ("cookie", "authorization", "host", "connection", "upgrade"):
-				headers.append(f"{k}: {v}")
 		self._ws = websocket.create_connection(
 			url,
 			timeout=self.timeout,
-			header=headers or None,
 		)
 		# Drain gateway.ready (and anything else) briefly so the first RPC is clean.
 		self._ws.settimeout(2)

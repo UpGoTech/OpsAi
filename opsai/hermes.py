@@ -62,15 +62,6 @@ def get_user_settings(user: str | None = None) -> dict[str, Any]:
 	if doc.user != user and "System Manager" not in frappe.get_roles(user):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-	extra_headers = {}
-	if doc.extra_headers:
-		try:
-			parsed = json.loads(doc.extra_headers)
-			if isinstance(parsed, dict):
-				extra_headers = {str(k): str(v) for k, v in parsed.items()}
-		except (TypeError, ValueError):
-			extra_headers = {}
-
 	cookies_raw = doc.get_password("session_cookies", raise_exception=False) or ""
 	cookies = {}
 	if cookies_raw:
@@ -90,10 +81,40 @@ def get_user_settings(user: str | None = None) -> dict[str, Any]:
 		"gateway_password": doc.get_password("gateway_password", raise_exception=False) or "",
 		"session_token": doc.get_password("session_token", raise_exception=False) or "",
 		"session_cookies": cookies,
-		"extra_headers": extra_headers,
+		"connection_status": (doc.connection_status or "").strip(),
 		"default_provider": getattr(doc, "default_provider", None) or "",
 		"default_model": getattr(doc, "default_model", None) or "",
 	}
+
+
+def is_explicitly_disconnected(settings: dict[str, Any] | None) -> bool:
+	"""True only when OpsAi Settings was marked Disconnected (sticky until Connect)."""
+	if not settings:
+		return False
+	status = (settings.get("connection_status") or "").strip().lower()
+	# Avoid substring traps: "disconnected" contains "connected".
+	return status == "disconnected" or status.startswith("disconnected ")
+
+
+def session_reconnect_allowed(settings: dict[str, Any] | None) -> bool:
+	"""Auto password_login / token use only when the user has not clicked Disconnect."""
+	return not is_explicitly_disconnected(settings)
+
+
+def is_hermes_connected(settings: dict[str, Any] | None) -> bool:
+	"""Live Hermes session available for chat (not merely gateway URL configured)."""
+	if not settings or not (settings.get("gateway_url") or "").strip():
+		return False
+	if is_explicitly_disconnected(settings):
+		return False
+	status = (settings.get("connection_status") or "").strip().lower()
+	if status == "connected" or status.startswith("connected "):
+		return True
+	# Legacy rows without connection_status: cookies or token imply a session.
+	auth_mode = (settings.get("auth_mode") or "password").strip()
+	if auth_mode in ("token", "session_token") and (settings.get("session_token") or "").strip():
+		return True
+	return bool(settings.get("session_cookies"))
 
 
 def _save_session_cookies(user: str, cookies: dict[str, str]):
@@ -103,6 +124,8 @@ def _save_session_cookies(user: str, cookies: dict[str, str]):
 	doc = frappe.get_doc("OpsAi Settings", user)
 	doc.session_cookies = json.dumps(cookies)
 	doc.connection_status = _("Connected")
+	# Empty Password fields on a loaded doc would otherwise be wiped by _save_passwords.
+	doc.flags.ignore_save_passwords = ["gateway_password", "session_token"]
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()  # nosemgrep: frappe-manual-commit — connect must persist before next call
 
@@ -115,8 +138,10 @@ def _auth_headers(settings: dict[str, Any]) -> dict[str, str]:
 	headers = {
 		"Content-Type": "application/json",
 		"Accept": "application/json",
-		**(settings.get("extra_headers") or {}),
 	}
+	# Explicit Disconnect must stick — do not send cookies or Bearer until Connect.
+	if is_explicitly_disconnected(settings):
+		return headers
 	auth_mode = (settings.get("auth_mode") or "password").strip()
 	token = (settings.get("session_token") or "").strip()
 	cookies = settings.get("session_cookies") or {}
@@ -257,13 +282,22 @@ def password_login(settings: dict[str, Any], *, persist: bool = True) -> dict[st
 
 
 def ensure_session(settings: dict[str, Any]) -> dict[str, Any]:
-	"""Ensure password-mode settings carry a live cookie jar (login if needed)."""
+	"""Ensure password-mode settings carry a live cookie jar (login if needed).
+
+	Never auto-login after an explicit Disconnect — Connect in OpsAi Settings must run first.
+	"""
+	if is_explicitly_disconnected(settings):
+		raise HermesError(_("Hermes is disconnected. Open OpsAi Settings and click Connect."))
 	auth_mode = (settings.get("auth_mode") or "password").strip()
 	if auth_mode in ("token", "session_token") and settings.get("session_token"):
 		return settings
 	if settings.get("session_cookies"):
 		return settings
-	if (settings.get("gateway_username") or "").strip() and (settings.get("gateway_password") or "").strip():
+	if (
+		session_reconnect_allowed(settings)
+		and (settings.get("gateway_username") or "").strip()
+		and (settings.get("gateway_password") or "").strip()
+	):
 		password_login(settings, persist=True)
 	return settings
 
@@ -333,7 +367,6 @@ def request(
 	params: dict | None = None,
 	timeout: int = 180,
 	settings: dict | None = None,
-	extra_headers: dict[str, str] | None = None,
 	_retried: bool = False,
 ) -> Any:
 	"""Call Hermes. Auto-reconnects once on login redirect when username/password are set."""
@@ -349,8 +382,6 @@ def request(
 			frappe.ValidationError,
 		)
 	headers["X-Hermes-Session-Key"] = session_key()
-	if extra_headers:
-		headers.update(extra_headers)
 
 	data = None if body is None else json.dumps(body).encode()
 	req = Request(url, data=data, headers=headers, method=method.upper())
@@ -359,8 +390,8 @@ def request(
 			raw = resp.read().decode("utf-8", errors="replace")
 			code = getattr(resp, "status", 200)
 			if is_login_redirect(code, resp.headers, raw) and not _retried:
-				# Session expired — refresh cookies and retry once.
-				if (settings.get("gateway_username") or "").strip():
+				# Session expired — refresh cookies and retry once (never after Disconnect).
+				if session_reconnect_allowed(settings) and (settings.get("gateway_username") or "").strip():
 					password_login(settings, persist=True)
 					return request(
 						method,
@@ -369,7 +400,6 @@ def request(
 						params=params,
 						timeout=timeout,
 						settings=settings,
-						extra_headers=extra_headers,
 						_retried=True,
 					)
 			return _parse_json_response(code, resp.headers, raw)
@@ -378,7 +408,7 @@ def request(
 	except HTTPError as err:
 		raw = err.read().decode("utf-8", errors="replace") if err.fp else str(err)
 		if is_login_redirect(err.code, err.headers, raw) and not _retried:
-			if (settings.get("gateway_username") or "").strip():
+			if session_reconnect_allowed(settings) and (settings.get("gateway_username") or "").strip():
 				password_login(settings, persist=True)
 				return request(
 					method,
@@ -387,7 +417,6 @@ def request(
 					params=params,
 					timeout=timeout,
 					settings=settings,
-					extra_headers=extra_headers,
 					_retried=True,
 				)
 		frappe.throw(_("Hermes error ({0}): {1}").format(err.code, _error_detail(raw)[:800]))
@@ -403,7 +432,6 @@ def try_request(
 	params: dict | None = None,
 	timeout: int = 30,
 	settings: dict | None = None,
-	extra_headers: dict[str, str] | None = None,
 ) -> tuple[bool, Any, str | None]:
 	"""HTTP call that never raises — used to probe /api vs /v1 without failing the request."""
 	try:
@@ -419,8 +447,6 @@ def try_request(
 	if "Authorization" not in headers and "Cookie" not in headers:
 		return False, None, _("Not connected — click Connect in OpsAi Settings")
 	headers["X-Hermes-Session-Key"] = session_key()
-	if extra_headers:
-		headers.update(extra_headers)
 
 	data = None if body is None else json.dumps(body).encode()
 	req = Request(url, data=data, headers=headers, method=method.upper())
@@ -429,14 +455,12 @@ def try_request(
 			raw = resp.read().decode("utf-8", errors="replace")
 			code = getattr(resp, "status", 200)
 			if is_login_redirect(code, resp.headers, raw) or code >= 400:
-				# One reconnect attempt for probes
-				if (settings.get("gateway_username") or "").strip():
+				# One reconnect attempt for probes (never after Disconnect).
+				if session_reconnect_allowed(settings) and (settings.get("gateway_username") or "").strip():
 					try:
 						password_login(settings, persist=True)
 						headers = _auth_headers(settings)
 						headers["X-Hermes-Session-Key"] = session_key()
-						if extra_headers:
-							headers.update(extra_headers)
 						req2 = Request(url, data=data, headers=headers, method=method.upper())
 						with _opener().open(req2, timeout=timeout) as resp2:
 							raw2 = resp2.read().decode("utf-8", errors="replace")
@@ -478,7 +502,6 @@ def request_bytes(
 	params: dict | None = None,
 	timeout: int = 120,
 	settings: dict | None = None,
-	extra_headers: dict[str, str] | None = None,
 	_retried: bool = False,
 ) -> bytes:
 	"""Authenticated Hermes GET/POST that returns raw bytes (file downloads)."""
@@ -491,8 +514,6 @@ def request_bytes(
 	if "Authorization" not in headers and "Cookie" not in headers:
 		raise HermesError(_("Not connected to Hermes. Open OpsAi Settings and click Connect."))
 	headers["X-Hermes-Session-Key"] = session_key()
-	if extra_headers:
-		headers.update(extra_headers)
 
 	req = Request(url, data=None, headers=headers, method=method.upper())
 	try:
@@ -502,7 +523,7 @@ def request_bytes(
 			# Peek at a text decode only for login / error detection.
 			sample = raw[:2000].decode("utf-8", errors="replace") if raw else ""
 			if is_login_redirect(code, resp.headers, sample) and not _retried:
-				if (settings.get("gateway_username") or "").strip():
+				if session_reconnect_allowed(settings) and (settings.get("gateway_username") or "").strip():
 					password_login(settings, persist=True)
 					return request_bytes(
 						method,
@@ -510,7 +531,6 @@ def request_bytes(
 						params=params,
 						timeout=timeout,
 						settings=settings,
-						extra_headers=extra_headers,
 						_retried=True,
 					)
 				raise HermesError(_("Hermes session expired — reconnect from OpsAi Settings."))
@@ -523,7 +543,7 @@ def request_bytes(
 		raw = err.read() if err.fp else b""
 		sample = raw.decode("utf-8", errors="replace") if raw else str(err)
 		if is_login_redirect(err.code, err.headers, sample) and not _retried:
-			if (settings.get("gateway_username") or "").strip():
+			if session_reconnect_allowed(settings) and (settings.get("gateway_username") or "").strip():
 				password_login(settings, persist=True)
 				return request_bytes(
 					method,
@@ -531,7 +551,6 @@ def request_bytes(
 					params=params,
 					timeout=timeout,
 					settings=settings,
-					extra_headers=extra_headers,
 					_retried=True,
 				)
 		raise HermesError(_("Hermes error ({0}): {1}").format(err.code, _error_detail(sample)[:800])) from err
