@@ -4,15 +4,34 @@ app_publisher = "OpsAi"
 app_description = "Per-user AI settings vault for OpsAi"
 app_email = "opsai@example.com"
 app_license = "MIT"
+app_icon = "octicon octicon-comment-discussion"
+app_color = "#3B87F7"
+app_logo_url = "/assets/opsai/images/opsai-logo.svg"
+app_home = "/opsai"
 
 required_apps = []
+
+# Apps screen tile (Frappe v16+ desk) → full-page OpsAi chat
+add_to_apps_screen = [
+	{
+		"name": app_name,
+		"logo": app_logo_url,
+		"title": app_title,
+		"route": app_home,
+		"has_permission": "opsai.check_app_permission",
+	}
+]
 
 # Includes in <head>
 # ------------------
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/opsai/css/opsai.css"
-# app_include_js = "/assets/opsai/js/opsai.js"
+# Dock icon + right-side OpsAi panel (Flow fork: opsai.chat island)
+app_include_js = [
+	"/assets/opsai/js/opsai_dock.js",
+	"/assets/opsai/js/opsai_launcher.js",
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/opsai/css/opsai.css"
@@ -36,6 +55,11 @@ required_apps = []
 
 # Home Pages
 # ----------
+
+# Full-page OpsAi chat (Flow-style /opsai SPA)
+website_route_rules = [
+	{"from_route": "/opsai/<path:app_path>", "to_route": "opsai"},
+]
 
 # application home page (will override Website Settings)
 # home_page = "login"
@@ -63,14 +87,16 @@ required_apps = []
 # Installation
 # ------------
 
-# before_install = "opsai.install.before_install"
-# after_install = "opsai.install.after_install"
+after_install = "opsai.install.after_install"
+after_migrate = ["opsai.permissions.ensure_opsai_role"]
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "opsai.uninstall.before_uninstall"
-# after_uninstall = "opsai.uninstall.after_uninstall"
+before_uninstall = "opsai.uninstall.before_uninstall"
+
+# Boot: has_opsai_access for dock/sidebar utility visibility
+extend_bootinfo = "opsai.boot.extend_bootinfo"
 
 # Integration Setup
 # ------------------

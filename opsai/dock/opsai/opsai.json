@@ -1,0 +1,23 @@
+{
+ "app": "opsai",
+ "creation": "2026-11-20 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Dock",
+ "idx": 0,
+ "items": [
+  {
+   "added": 0,
+   "hidden": 0,
+   "icon": "message",
+   "link_to": "OpsAi",
+   "link_type": "Sidebar",
+   "title": "OpsAi"
+  }
+ ],
+ "modified": "2026-11-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "opsai",
+ "owner": "Administrator",
+ "standard": 1,
+ "user": ""
+}
