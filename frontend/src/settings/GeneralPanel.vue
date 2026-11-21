@@ -56,5 +56,9 @@ const flow = inject("opsai");
 const page = inject("opsaiPage");
 const user = computed(() => page.state.boot.user ?? { name: "", full_name: "" });
 const siteSettings = computed(() => page.can("Flow Settings", "read"));
-const { colorScheme, setColorScheme } = inPanel ? {} : useColorScheme();
+// Panel host owns the theme — skip the composable, but keep defined bindings so a
+// future template change cannot pass undefined into Select (row stays v-if="!inPanel").
+const { colorScheme, setColorScheme } = inPanel
+	? { colorScheme: "system", setColorScheme: () => {} }
+	: useColorScheme();
 </script>
